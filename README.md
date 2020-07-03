@@ -1,4 +1,4 @@
-# IAT-Api-Hash
+# API Hasher
 A simple C project which I developed, it leverages API hashing to call and lookup functions within the IAT and the EAT(Kinda):
 
 * Look up the IAT and load it entirely to a linked list
@@ -10,5 +10,4 @@ A simple C project which I developed, it leverages API hashing to call and looku
 
 # TODO
 * Obfuscate all string references
-* Free linked list
 * Add full EAT support - Currently locates hashes within the EAT and then resolves them using GetProdAddress
