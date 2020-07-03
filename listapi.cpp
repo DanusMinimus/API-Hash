@@ -87,7 +87,6 @@ BOOL LISTAPI_setDataAPI(IN PAPI_NODE pnodeCurr, IN PCSTR pcstrAPIName, IN DWORD 
 {
 	BOOL bRetualVal = FALSE;
 	errno_t errTestCpy = 0;
-	PCHAR * cstrCurrString;
 
 	INT nSizeOfAPIToCopy = strlen(pcstrAPIName)+1;
 
@@ -166,3 +165,23 @@ lbl_cleanup:
 	return bReturnVal;
 }
 
+BOOL LISTAPI_freeList(IN PAPI_NODE pnodeHead)
+{
+	PAPI_NODE pnodeLast;
+	BOOL bReturnVal = TRUE;
+
+	while (NULL != pnodeHead)
+	{
+		pnodeLast = pnodeHead;
+		pnodeHead = pnodeHead->papiNext;
+		bReturnVal = LISTAPI_freeNode(pnodeLast);
+
+		if (FALSE == bReturnVal)
+		{
+			goto lbl_cleanup;
+		}
+	}
+
+lbl_cleanup:
+	return bReturnVal;
+}

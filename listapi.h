@@ -92,5 +92,8 @@ BOOL LISTAPI_freeNode(IN PAPI_NODE pnodeCurr);
 
 /*
 Free list function
+IN pnodeHead - The head of the list
+OUT - Success Code
 */
+BOOL LISTAPI_freeList(IN PAPI_NODE pnodeHead);
 

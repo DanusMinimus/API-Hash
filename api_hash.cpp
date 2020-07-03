@@ -24,14 +24,25 @@ int main()
     HASHER_bruteForceIAT(papiHead);
 
     /*
+    Free list
+    */
+    LISTAPI_freeList(papiHead);
+
+    /*
     Locate GetProcAddress and LoadLibraryA within the IAT using hashes
     */
     pLoadLibraryA = HASHER_locateHashInIAT(LOADLIBHASH);
     pGetProcAddr = HASHER_locateHashInIAT(GETPROCHASH);
 
+    /*
+    Load and get a handle to User32.dll
+    */
     CreateWINAPI(MyLoadLibrary, HMODULE, pLoadLibraryA, LPCSTR);
     hUser32Lib = CallWINAPI(MyLoadLibrary, "User32.dll");
 
+    /*
+    Resolve the MessageBox function using the EAT
+    */
     pMessageBoxA = HASHER_locateHashInEAT((PIMAGE_DOS_HEADER)hUser32Lib, MSGBOXHASH);
 
     CreateWINAPI(MyMessageBoxA, LRESULT, pMessageBoxA, HWND, LPCSTR, LPCSTR, UINT);

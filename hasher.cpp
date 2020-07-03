@@ -151,7 +151,7 @@ VOID HASHER_bruteForceIAT(IN PAPI_NODE currNode)
 
 		if (NULL == hDLLHandle)
 		{
-			goto lbl_cleanup;
+			break;
 		}
 
 		printf("Loading DLL: %s\n", currNode->cstrDLL_Name);
@@ -164,7 +164,8 @@ VOID HASHER_bruteForceIAT(IN PAPI_NODE currNode)
 			if (NULL == pProcAddr)
 			{
 				CloseHandle(hDLLHandle);
-				goto lbl_cleanup;
+				printf("Failed to load dll! Error code:%d\n", GetLastError());
+				break;
 			}
 
 			printf("\t|-Address of API Hash(%s) 0x%08x: 0x%08x\n", currNode->pcstrAPI_Name[nIndex], dwHash, (UINT)pProcAddr);
@@ -174,7 +175,6 @@ VOID HASHER_bruteForceIAT(IN PAPI_NODE currNode)
 		currNode = currNode->papiNext;
 	}
 
-lbl_cleanup:
 
 }
 
@@ -235,6 +235,9 @@ LPVOID HASHER_locateHashInEAT(IN PIMAGE_DOS_HEADER pBaseAddr, IN DWORD dwHash)
 
 		if (dwHash == dwCompareHash)
 		{
+			/*
+			I am unable to understand how to load functions from the AddressOfFunctions so this is a quick fix
+			*/
 			pGetProcAddr = HASHER_locateHashInIAT(GETPROCHASH);
 			CreateWINAPI(MyProcAddr, LRESULT, pGetProcAddr, HMODULE, LPCSTR);
 			pProcAddr = (LPVOID)CallWINAPI(MyProcAddr, (HMODULE)pBaseAddr, (LPCSTR)((DWORD)pBaseAddr + (DWORD)dwArrayNames[nIndex]));
