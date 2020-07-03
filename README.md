@@ -10,4 +10,4 @@ A simple C project which I developed, it leverages API hashing to call and looku
 
 # TODO
 * Obfuscate all string references
-* Add full EAT support - Currently locates hashes within the EAT and then resolves them using GetProdAddress
+* Add full EAT support - Currently locates hashes within the EAT and then resolves them using GetProcAddress
