@@ -9,3 +9,4 @@ A simple C project which I developed, it leverages API hashing to call and looku
 
 # TODO
 * Add EAT support for extra obfuscation
+* Free linked list
