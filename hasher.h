@@ -11,8 +11,12 @@
 	TypeDef(WINAPI* ProcName)(__VA_ARGS__) = (TypeDef(WINAPI* )(__VA_ARGS__))ProcAddr; \
 
 #define CallWINAPI(ProcName, ...) \
-	ProcName(__VA_ARGS__)
+	ProcName(__VA_ARGS__);
+
 /*##############################Constants#########################################*/
+#define LOADLIBHASH 0xf14af8f6
+#define GETPROCHASH 0x0b4a2f29
+#define MSGBOXHASH 0xe98ecfb6
 
 /*##############################Typedef#########################################*/
 
@@ -59,11 +63,20 @@ VOID HASHER_bruteForceIAT(IN PAPI_NODE currNode);
 
 /*
 This function returns a specific API that matches that hash within the IAT
+IN pBaseAddr - The base address of the DLL
 IN dwHash - The CRC32 Hash
 
 OUT LPVOID - The procedure address matching the supllied hash
 */
 LPVOID HASHER_locateHashInIAT(IN DWORD dwHash);
+
+/*
+This function returns a specific API that matches that hash within the EAT
+IN dwHash - The CRC32 Hash
+
+OUT LPVOID - The procedure address matching the supllied hash
+*/
+LPVOID HASHER_locateHashInEAT(IN PIMAGE_DOS_HEADER pBaseAddr, IN DWORD dwHash);
 
 /*
 This function accepts a CRC32 hash identfier and returns its matched API address
@@ -78,6 +91,15 @@ LPVOID HASHER_getProcByHash(IN PIMAGE_DOS_HEADER pBaseAddr, IN PIMAGE_IMPORT_DES
 
 /*
 This function returns the Import Descriptor address
+IN pBaseAddr - The base address of the DLL
+
 OUT - The address of the Import Descriptor
 */
+PIMAGE_EXPORT_DIRECTORY HASHER_getExportDescriptor(IN PIMAGE_DOS_HEADER pBaseAddr);
+
+/*
+This function returns the Export Descriptor address
+OUT - The address of the Export Descriptor
+*/
 PIMAGE_IMPORT_DESCRIPTOR HASHER_getImportDescriptor();
+

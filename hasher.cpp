@@ -188,6 +188,35 @@ LPVOID HASHER_locateHashInIAT(IN DWORD dwHash)
 	return pProcAddr;
 }
 
+LPVOID HASHER_locateHashInEAT(IN PIMAGE_DOS_HEADER pBaseAddr, IN DWORD dwHash)
+{
+	LPVOID pProcAddr = NULL;
+	LPVOID pGetProcAddr = NULL;
+	DWORD dwCompareHash;
+
+	PIMAGE_EXPORT_DIRECTORY pExportDescriptor = HASHER_getExportDescriptor(pBaseAddr);
+
+	DWORD* dwArrayNames = (DWORD*)((DWORD)pBaseAddr + (DWORD)pExportDescriptor->AddressOfNames);
+	DWORD* dwArrayOridinals = (DWORD*)((DWORD)pBaseAddr + (DWORD)pExportDescriptor->AddressOfNameOrdinals);
+	DWORD* dwArrayFunctions = (DWORD*)((DWORD)pBaseAddr + (DWORD)pExportDescriptor->AddressOfFunctions);
+
+	for(INT nIndex = 0; nIndex < (INT)pExportDescriptor->NumberOfNames; nIndex++)
+	{
+		dwCompareHash = HASHER_crc32b((LPCSTR)((DWORD)pBaseAddr + (DWORD)dwArrayNames[nIndex]));
+
+		if (dwHash == dwCompareHash)
+		{
+			pGetProcAddr = HASHER_locateHashInIAT(GETPROCHASH);
+			CreateWINAPI(MyProcAddr, LRESULT, pGetProcAddr, HMODULE, LPCSTR);
+			pProcAddr = (LPVOID)CallWINAPI(MyProcAddr, (HMODULE)pBaseAddr, (LPCSTR)((DWORD)pBaseAddr + (DWORD)dwArrayNames[nIndex]));
+			printf("\nSuccessfully located CRC32 Hash within the EAT at 0x%08x\n", (UINT)pProcAddr);
+			break;
+		}
+	}
+
+	return pProcAddr;
+
+}
 
 PIMAGE_IMPORT_DESCRIPTOR HASHER_getImportDescriptor()
 {
@@ -199,4 +228,15 @@ PIMAGE_IMPORT_DESCRIPTOR HASHER_getImportDescriptor()
 	PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = (PIMAGE_IMPORT_DESCRIPTOR)((DWORD)(pBaseAddr)+sEntryImport.VirtualAddress);
 
 	return pImportDescriptor;
+}
+
+PIMAGE_EXPORT_DIRECTORY HASHER_getExportDescriptor(IN PIMAGE_DOS_HEADER pBaseAddr)
+{
+	PIMAGE_NT_HEADERS pIMAGE_NT_HEADER = (PIMAGE_NT_HEADERS)((DWORD)pBaseAddr + pBaseAddr->e_lfanew);
+	IMAGE_OPTIONAL_HEADER sOptionalHeader = (pIMAGE_NT_HEADER->OptionalHeader);
+	IMAGE_DATA_DIRECTORY sEntryExport = sOptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
+
+	PIMAGE_EXPORT_DIRECTORY pExportDescriptor = (PIMAGE_EXPORT_DIRECTORY)((DWORD)(pBaseAddr)+sEntryExport.VirtualAddress);
+
+	return pExportDescriptor;
 }

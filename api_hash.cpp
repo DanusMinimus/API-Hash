@@ -3,8 +3,6 @@
 
 /*##############################Includes##########################################*/
 #include "hasher.h"
-#define LOADLIBHASH 0xf14af8f6
-#define GETPROCHASH 0x0b4a2f29
 
 int main()
 {
@@ -34,8 +32,7 @@ int main()
     CreateWINAPI(MyLoadLibrary, HMODULE, pLoadLibraryA, LPCSTR);
     hUser32Lib = CallWINAPI(MyLoadLibrary, "User32.dll");
 
-    CreateWINAPI(MyProcAddr, LRESULT, pGetProcAddr, HMODULE, LPCSTR);
-    pMessageBoxA = (LPVOID)CallWINAPI(MyProcAddr, hUser32Lib, "MessageBoxA");
+    pMessageBoxA = HASHER_locateHashInEAT((PIMAGE_DOS_HEADER)hUser32Lib, MSGBOXHASH);
 
     CreateWINAPI(MyMessageBoxA, LRESULT, pMessageBoxA, HWND, LPCSTR, LPCSTR, UINT);
     CallWINAPI(MyMessageBoxA, NULL, "Hello API HASH", "Rekt", 1);
