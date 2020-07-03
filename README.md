@@ -11,3 +11,4 @@ A simple C project which I developed, it leverages API hashing to call and looku
 # TODO
 * Obfuscate all string references
 * Free linked list
+* Close open handles
