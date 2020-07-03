@@ -139,7 +139,7 @@ VOID HASHER_bruteForceIAT(IN PAPI_NODE currNode)
 {
 	DWORD dwHash;
 	HMODULE hDLLHandle;
-	LPVOID pProcAddr;
+	LPVOID pProcAddr = NULL;
 
 	PIMAGE_DOS_HEADER pBaseAddr = (PIMAGE_DOS_HEADER)GetModuleHandle(NULL);
 	PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = HASHER_getImportDescriptor();
@@ -148,18 +148,33 @@ VOID HASHER_bruteForceIAT(IN PAPI_NODE currNode)
 	for (; NULL != pImportDescriptor->Name && NULL != currNode; pImportDescriptor++)
 	{
 		hDLLHandle = LoadLibraryA(currNode->cstrDLL_Name);
+
+		if (NULL == hDLLHandle)
+		{
+			goto lbl_cleanup;
+		}
+
 		printf("Loading DLL: %s\n", currNode->cstrDLL_Name);
 
 		for (INT nIndex = 0; nIndex < (INT)currNode->nStringSize; nIndex++)
 		{
 			dwHash = currNode->dwHashArray[nIndex];
 			pProcAddr = HASHER_getProcByHash(pBaseAddr, pImportDescriptor, hDLLHandle, dwHash);
+
+			if (NULL == pProcAddr)
+			{
+				CloseHandle(hDLLHandle);
+				goto lbl_cleanup;
+			}
+
 			printf("\t|-Address of API Hash(%s) 0x%08x: 0x%08x\n", currNode->pcstrAPI_Name[nIndex], dwHash, (UINT)pProcAddr);
 		}
 
 		printf("\n");
 		currNode = currNode->papiNext;
 	}
+
+lbl_cleanup:
 
 }
 
@@ -176,7 +191,20 @@ LPVOID HASHER_locateHashInIAT(IN DWORD dwHash)
 	{
 		dwNameAddr = ((DWORD)(pBaseAddr)+pImportDescriptor->Name);
 		hDLLHandle = LoadLibraryA((LPCSTR)dwNameAddr);
+
+		if (INVALID_HANDLE_VALUE == hDLLHandle)
+		{
+			CloseHandle(hDLLHandle);
+			goto lbl_cleanup;
+		}
+
 		pProcAddr = HASHER_getProcByHash(pBaseAddr, pImportDescriptor, hDLLHandle, dwHash);
+
+		if (NULL == pProcAddr)
+		{
+			CloseHandle(hDLLHandle);
+			goto lbl_cleanup;
+		}
 
 		if (NULL != pProcAddr)
 		{
@@ -185,6 +213,7 @@ LPVOID HASHER_locateHashInIAT(IN DWORD dwHash)
 		}
 	}
 
+lbl_cleanup:
 	return pProcAddr;
 }
 
@@ -209,13 +238,19 @@ LPVOID HASHER_locateHashInEAT(IN PIMAGE_DOS_HEADER pBaseAddr, IN DWORD dwHash)
 			pGetProcAddr = HASHER_locateHashInIAT(GETPROCHASH);
 			CreateWINAPI(MyProcAddr, LRESULT, pGetProcAddr, HMODULE, LPCSTR);
 			pProcAddr = (LPVOID)CallWINAPI(MyProcAddr, (HMODULE)pBaseAddr, (LPCSTR)((DWORD)pBaseAddr + (DWORD)dwArrayNames[nIndex]));
+
+			if (NULL == pProcAddr)
+			{
+				goto lbl_cleanup;
+			}
+
 			printf("\nSuccessfully located CRC32 Hash within the EAT at 0x%08x\n", (UINT)pProcAddr);
 			break;
 		}
 	}
 
+lbl_cleanup:
 	return pProcAddr;
-
 }
 
 PIMAGE_IMPORT_DESCRIPTOR HASHER_getImportDescriptor()
