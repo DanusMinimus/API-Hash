@@ -8,6 +8,3 @@ A simple C project which I developed, it leverages API hashing to call and looku
 * Look up the EAT to locate APIs using a CRC32 hash
 * Create generic WINAPI calls using macros
 
-# TODO
-* Obfuscate all string references
-* Add full EAT support - Currently locates hashes within the EAT and then resolves them using GetProcAddress
