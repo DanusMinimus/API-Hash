@@ -227,7 +227,7 @@ LPVOID HASHER_locateHashInEAT(IN PIMAGE_DOS_HEADER pBaseAddr, IN DWORD dwHash)
 	PIMAGE_EXPORT_DIRECTORY pExportDescriptor = HASHER_getExportDescriptor(pBaseAddr);
 
 	DWORD* dwArrayNames = (DWORD*)((DWORD)pBaseAddr + (DWORD)pExportDescriptor->AddressOfNames);
-	WORD* dwArrayOridinals = (WORD*)((DWORD)pBaseAddr + (DWORD)pExportDescriptor->AddressOfNameOrdinals);
+	WORD* wArrayOridinals = (WORD*)((DWORD)pBaseAddr + (DWORD)pExportDescriptor->AddressOfNameOrdinals);
 	DWORD* dwArrayFunctions = (DWORD*)((DWORD)pBaseAddr + (DWORD)pExportDescriptor->AddressOfFunctions);
 
 	for(INT nIndex = 0; nIndex < (INT)pExportDescriptor->NumberOfNames; nIndex++)
@@ -237,7 +237,7 @@ LPVOID HASHER_locateHashInEAT(IN PIMAGE_DOS_HEADER pBaseAddr, IN DWORD dwHash)
 		if (dwHash == dwCompareHash)
 		{
 			wOridinal = ((WORD)dwArrayOridinals[nIndex]);
-			pProcAddr = (LPVOID)((DWORD)pBaseAddr + (DWORD)dwArrayFunctions[wOridinal]);
+			pProcAddr = (LPVOID)((DWORD)pBaseAddr + (DWORD)wArrayFunctions[wOridinal]);
 			/*
 			pGetProcAddr = HASHER_locateHashInIAT(GETPROCHASH);
 			CreateWINAPI(MyProcAddr, LRESULT, pGetProcAddr, HMODULE, LPCSTR);
