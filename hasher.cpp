@@ -88,7 +88,6 @@ lbl_cleanup:
 	return bReturnVal;
 }
 
-/*Credit - https://stackoverflow.com/questions/21001659/crc32-algorithm-implementation-in-c-without-a-look-up-table-and-with-a-public-li*/
 DWORD HASHER_crc32b(IN PCSTR pcstrString) 
 {
 	INT nIndex;
@@ -223,11 +222,12 @@ LPVOID HASHER_locateHashInEAT(IN PIMAGE_DOS_HEADER pBaseAddr, IN DWORD dwHash)
 	LPVOID pProcAddr = NULL;
 	LPVOID pGetProcAddr = NULL;
 	DWORD dwCompareHash;
+	WORD wOridinal;
 
 	PIMAGE_EXPORT_DIRECTORY pExportDescriptor = HASHER_getExportDescriptor(pBaseAddr);
 
 	DWORD* dwArrayNames = (DWORD*)((DWORD)pBaseAddr + (DWORD)pExportDescriptor->AddressOfNames);
-	DWORD* dwArrayOridinals = (DWORD*)((DWORD)pBaseAddr + (DWORD)pExportDescriptor->AddressOfNameOrdinals);
+	WORD* dwArrayOridinals = (WORD*)((DWORD)pBaseAddr + (DWORD)pExportDescriptor->AddressOfNameOrdinals);
 	DWORD* dwArrayFunctions = (DWORD*)((DWORD)pBaseAddr + (DWORD)pExportDescriptor->AddressOfFunctions);
 
 	for(INT nIndex = 0; nIndex < (INT)pExportDescriptor->NumberOfNames; nIndex++)
@@ -236,9 +236,9 @@ LPVOID HASHER_locateHashInEAT(IN PIMAGE_DOS_HEADER pBaseAddr, IN DWORD dwHash)
 
 		if (dwHash == dwCompareHash)
 		{
+			wOridinal = ((WORD)dwArrayOridinals[nIndex]);
+			pProcAddr = (LPVOID)((DWORD)pBaseAddr + (DWORD)dwArrayFunctions[wOridinal]);
 			/*
-			I am unable to understand how to load functions from the AddressOfFunctions so this is a quick fix
-			*/
 			pGetProcAddr = HASHER_locateHashInIAT(GETPROCHASH);
 			CreateWINAPI(MyProcAddr, LRESULT, pGetProcAddr, HMODULE, LPCSTR);
 			pProcAddr = (LPVOID)CallWINAPI(MyProcAddr, (HMODULE)pBaseAddr, (LPCSTR)((DWORD)pBaseAddr + (DWORD)dwArrayNames[nIndex]));
@@ -247,6 +247,7 @@ LPVOID HASHER_locateHashInEAT(IN PIMAGE_DOS_HEADER pBaseAddr, IN DWORD dwHash)
 			{
 				goto lbl_cleanup;
 			}
+			*/
 
 			printf("\nSuccessfully located CRC32 Hash within the EAT at 0x%08x\n", (UINT)pProcAddr);
 			break;
